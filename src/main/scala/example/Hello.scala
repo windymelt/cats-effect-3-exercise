@@ -17,15 +17,21 @@ object Hello extends IOApp.Simple with AsynchronousComputation {
     // ThreadはCore数いっぱい生成され、使いまわされる
     _ <- List.range(0, cnt * 2).parTraverse(n => doSomething(n).debug)
     _ <- IO.println("Now, we are going to compute on pool for blocking I/O...")
-    _ <- List.range(0, cnt * 2).parTraverse(n => IO.blocking {
-      Thread.sleep(1000)
-      println(s"(inside blocking)[${Thread.currentThread().getName()}]")
-      n
-    }) // debugはここでは使えない(debug自体はblockingの外で実行されるため)
+    _ <- List
+      .range(0, cnt * 2)
+      .parTraverse(n =>
+        IO.blocking {
+          Thread.sleep(1000)
+          println(s"(inside blocking)[${Thread.currentThread().getName()}]")
+          n
+        }
+      ) // debugはここでは使えない(debug自体はblockingの外で実行されるため)
     _ <- IO.println("CE3 doesn't have IO.shift. but it has IO.blocking()")
     _ <- IO("one").debug
     _ <- IO("two").debug
-    _ <- IO.blocking(s"blocking three: ${Thread.currentThread().getName()}").debug
+    _ <- IO
+      .blocking(s"blocking three: ${Thread.currentThread().getName()}")
+      .debug
     _ <- IO("four").debug
     _ <- IO("five").debug
     _ <- IO("six").debug
@@ -38,13 +44,17 @@ object Hello extends IOApp.Simple with AsynchronousComputation {
 trait AsynchronousComputation {
   import scala.concurrent.duration._
   import scala.language.postfixOps
-  implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
-  def k1 = Future { Thread.sleep(1000) ; println(s"k1 is running on ${Thread.currentThread().getName()}") }
+  implicit val ec: scala.concurrent.ExecutionContext =
+    scala.concurrent.ExecutionContext.global
+  def k1 = Future {
+    Thread.sleep(1000);
+    println(s"k1 is running on ${Thread.currentThread().getName()}")
+  }
 
   def doSomething(i: Int) = IO.sleep(1 second) >> IO(i)
 
   implicit class IOShow[A](io: IO[A]) {
-    def debug(): IO[A] = for{
+    def debug(): IO[A] = for {
       res <- io
       _ <- IO.println(s"[${Thread.currentThread().getName()}] -> ${res}")
     } yield res
