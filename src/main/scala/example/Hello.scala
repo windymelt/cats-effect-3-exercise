@@ -26,7 +26,7 @@ object Hello extends IOApp.Simple with AsynchronousComputation with Download {
       .range(0, 2500)
       .parTraverse(i =>
         IO.blocking {
-          Thread.sleep((Math.random() * 1000).toLong)
+          Thread.sleep((i * 10).toLong)
           // println(s"(inside blocking)[${Thread.currentThread().getName()}]")
           val y = i / 50
           val x = i % 50
@@ -65,13 +65,12 @@ trait AsynchronousComputation {
 
   def clearScreen = IO.print("\u001b[2J")
   def threadColor = {
-    val n = Thread.currentThread().getId() % 256
-    val r = n % 2 * 255
-    val g = n >> 1
-    s"\u001b[48;2;$r;$g;0m \u001b[0m"
+    val n = Thread.currentThread().getId() % 32
+    val r = n * 8
+    s"\u001b[48;2;$r;0;0m \u001b[0m"
   }
   def doSomething(i: Int) =
-    IO.sleep(Math.random() * 10 second) >> IO {
+    IO.sleep(i / 100 second) >> IO {
       val y = i / 50
       val x = i % 50
       print(s"\u001b[$y;${x}H${threadColor}")
