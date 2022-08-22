@@ -26,10 +26,11 @@ object Hello extends IOApp.Simple with AsynchronousComputation with Download {
       .range(0, 2500)
       .parTraverse(i =>
         IO.blocking {
-          Thread.sleep((i * 10).toLong)
           // println(s"(inside blocking)[${Thread.currentThread().getName()}]")
           val y = i / 50
           val x = i % 50
+          print(s"\u001b[$y;${x}H*")
+          Thread.sleep((i * 10).toLong)
           print(s"\u001b[$y;${x}H${threadColor}")
           i
         }
@@ -69,12 +70,13 @@ trait AsynchronousComputation {
     val r = n * 8
     s"\u001b[48;2;$r;0;0m \u001b[0m"
   }
-  def doSomething(i: Int) =
-    IO.sleep(i / 100 second) >> IO {
-      val y = i / 50
-      val x = i % 50
+  def doSomething(i: Int) = {
+    val y = i / 50
+    val x = i % 50
+    IO.print(s"\u001b[$y;${x}H*") >> IO.sleep(i / 100 second) >> IO {
       print(s"\u001b[$y;${x}H${threadColor}")
     }
+  }
 
   implicit class IOShow[A](io: IO[A]) {
     def debug(): IO[A] = for {
@@ -89,7 +91,7 @@ trait Download {
   import scala.language.postfixOps
 
   def verySlowDownload: IO[String] =
-    IO.println("Starting Download") >> IO.sleep(3 second) >> IO.delay {
+    IO.println("Starting Download") >> IO.sleep(3 second) >> IO.blocking {
       // Finally we got result
       "/tmp/foobar.txt"
     }
