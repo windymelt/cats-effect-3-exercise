@@ -98,11 +98,6 @@ trait Download {
 
   def backgroundDownloadingIndicator: ResourceIO[IO[OutcomeIO[Unit]]] =
     downloadingIndicator.background
-  def downloadingIndicator: IO[Unit] =
-    IO.sleep(100 milliseconds) *> (IO.print("\r|") *> IO.sleep(
-      100 milliseconds
-    ) *> IO.print("\r/") *> IO.sleep(100 milliseconds) *> IO.print("\r-") *> IO
-      .sleep(100 milliseconds) *> IO.print("\r\\") *> IO.sleep(
-      100 milliseconds
-    )).foreverM
+  def piece(s: String): IO[Unit] = IO.sleep(100 milliseconds) *> IO.print(s"\r$s")
+  def downloadingIndicator: IO[Unit] = piece("⢄") *> piece("⠢") *> piece("⠑") *> piece("⡈") foreverM
 }
